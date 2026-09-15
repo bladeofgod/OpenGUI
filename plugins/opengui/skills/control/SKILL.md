@@ -61,6 +61,19 @@ endpoints; close the matching platform's session when finished.
 Use `--interfaces` for current argument schemas. Each interface takes one JSON
 object, either as one quoted argument or on stdin.
 
+For AI-driven observations and actions, invoke `scripts/opengui --compact
+opengui_observe ...` or `scripts/opengui --compact opengui_act ...`. The compact
+result retains the observation id, screenshot path, layout stability, focused
+editable fields and permission status. `observationPath` points to the complete
+JSON when more context is needed. Compact nodes are not the complete layout.
+
+If the host command tool reports that a process is still running, wait for that
+same process to finish. Do not parse a partial tool response as JSON or repeat
+its action. Without compact mode, redirect the complete JSON to a private file
+and read a small summary plus the screenshot path; terminal output can be
+truncated. Close/cancel removes both the runtime JPEG and JSON, so copy required
+acceptance evidence before closing.
+
 1. `opengui_list_devices {}`: choose only authorized devices. If multiple devices
    could satisfy the request, clarify which to use; never guess from a serial.
 2. `opengui_open_session {"deviceIds":["returned-id"],"mode":"control"}` freezes

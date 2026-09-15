@@ -11,8 +11,8 @@ remain offline. Do not expose passwords, credentials, or unrelated private data.
 
 The standalone package uses its own local directory:
 `~/.codex/opengui-codex` (or the explicitly configured
-`OPENGUI_CODEX_DATA_DIR`). Session screenshots are owner-readable files under
-`observations/`. Normal close/cancel removes that session's images. Leftovers
+`OPENGUI_CODEX_DATA_DIR`). Session screenshots and complete observation JSON are owner-readable files under
+`observations/`. Normal close/cancel removes that session's images and JSON. Leftovers
 older than 24 hours are pruned at daemon startup; if the plugin never starts again,
 they remain until you remove them. Runtime downloads remain cached for offline
 reuse. No production DSH configuration or cache is read or migrated.

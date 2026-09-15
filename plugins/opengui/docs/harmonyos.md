@@ -28,6 +28,17 @@ node lib/cli.js opengui_open_session '{}'
 
 HDC 来自本机 SDK，本实现不分发 HDC、不安装手机代理，也不初始化 ADB/scrcpy。若 `--doctor` 无设备，检查手机调试开关及授权；它不会重启手机或替换其他程序的 HDC 服务。
 
+## AI 调用时的输出
+
+建议使用 `scripts/opengui --compact opengui_observe ...` 和
+`scripts/opengui --compact opengui_act ...`。终端保留截图路径、观察 ID、布局稳定性、
+聚焦输入框和授权状态，完整 JSON 存在 `observationPath`。默认非 compact 输出保持完整。
+精简输出中的节点不完整，不能据此判断某元素不存在；完整布局仍需结合截图判断。
+
+若宿主工具提示命令仍在执行，应等待原进程完成，不能解析中间结果或重复动作。
+本地会话结束时 JPEG 与 JSON 一起清理，需要留存的验收证据应提前复制。
+新增完整观察文件后协议升级为 3；升级前先结束旧版会话并关闭对应守护进程。
+
 ## 操作接口
 
 先调用 `opengui_observe` 并查看返回的 JPEG 文件。每次动作传入最新 `observationId`，以及明确的 `externalSideEffect` 分类。动作失败后，旧 observation 被消耗，须重新观察；不能盲目重复发送或其他业务动作。

@@ -110,7 +110,7 @@ owned by that task across short-lived CLI connections; other tasks cannot list,
 inspect, act on, or cancel them. Missing identity fails closed. This protects
 against task mixups, not malicious same-user processes that can forge environment
 variables or read local files. Device-wall tokens are scoped to one session.
-Protocol 2 rejects older daemons; finish their sessions and let them exit before
+Protocol 3 rejects older daemons; finish their sessions and let them exit before
 using the updated package. A failed action consumes its old observation, requiring
 a new capture before another action. Reconnected devices retain their identity
 within the daemon lifetime.

@@ -6,7 +6,7 @@ import { isAbsolute, join, parse, resolve, sep } from 'node:path'
 import type { CodexObservation } from './codex/service.ts'
 
 export const VERSION = '0.1.0'
-export const PROTOCOL_VERSION = 2
+export const PROTOCOL_VERSION = 3
 export const SESSION_IDLE_MS = 30 * 60_000
 export const DAEMON_IDLE_MS = 5 * 60_000
 export const OBSERVATION_RETENTION_MS = 24 * 60 * 60_000
@@ -38,7 +38,12 @@ export function daemonEndpoint(root = dataDirectory()): string {
   return join(tmpdir(), `opengui-codex-standalone-${process.getuid?.() ?? 'user'}-${identity}.sock`)
 }
 
-/** Only session-owned images are removed. Runtime files are outside this tree. */
+export type MaterializedObservation = Omit<CodexObservation, 'screenshot'> & {
+  readonly observationPath: string
+  readonly screenshot: Omit<CodexObservation['screenshot'], 'data'> & { readonly path: string }
+}
+
+/** Only session-owned evidence is removed. Runtime files are outside this tree. */
 export class ObservationStore {
   constructor(readonly root: string) {}
 
@@ -46,14 +51,22 @@ export class ObservationStore {
     return join(this.root, createHash('sha256').update(sessionId).digest('hex'))
   }
 
-  async save(value: CodexObservation): Promise<unknown> {
+  async save(value: CodexObservation): Promise<MaterializedObservation> {
     await privateDirectory(this.root)
     const directory = await privateDirectory(this.directory(value.sessionId))
     const digest = createHash('sha256').update(value.deviceId + '\0' + value.observationId).digest('hex')
     const path = join(directory, digest + '.jpg')
+    const observationPath = join(directory, digest + '.json')
     await writeFile(path, Buffer.from(value.screenshot.data, 'base64'), { mode: 0o600, flag: 'wx' })
     const { data: _data, ...screenshot } = value.screenshot
-    return { ...value, screenshot: { ...screenshot, path } }
+    const materialized = { ...value, observationPath, screenshot: { ...screenshot, path } }
+    try {
+      await writeFile(observationPath, JSON.stringify(materialized), { mode: 0o600, flag: 'wx' })
+    } catch (error) {
+      await rm(path, { force: true })
+      throw error
+    }
+    return materialized
   }
 
   async remove(sessionId: string): Promise<void> {

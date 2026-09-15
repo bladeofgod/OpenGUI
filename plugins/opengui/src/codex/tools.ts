@@ -59,6 +59,7 @@ const observationSchema = {
     sessionId: { type: 'string' }, deviceId: { type: 'string' }, observationId: { type: 'string' },
     unchangedFromObservationId: { type: 'string' }, width: { type: 'integer' }, height: { type: 'integer' },
     foregroundPackage: { type: 'string' },
+    observationPath: { type: 'string', description: 'Private JSON file containing the complete observation, removed with the session.' },
     layout: {
       type: 'object', additionalProperties: false,
       properties: {

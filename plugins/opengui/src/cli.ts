@@ -12,14 +12,16 @@ import { confirmLocalSetup } from './confirmation.ts'
 import { OPENGUI_CODEX_TOOLS, validateToolArguments } from './codex/tools.ts'
 import { ensureDaemon, request, sendRequest, startDaemon } from './daemon.ts'
 import { VERSION, daemonEndpoint, dataDirectory } from './state.ts'
+import { compactOutput } from './compact-output.ts'
 
 export async function runCli(argv: readonly string[], signal = new AbortController().signal): Promise<unknown> {
-  const [name, raw] = argv
+  const compact = argv[0] === '--compact'
+  const [name, raw] = compact ? argv.slice(1) : argv
   if (!name || name === '--help' || name === '-h') {
     return {
       name: 'OpenGUI for Codex', version: VERSION, devicePlatform: devicePlatform(),
-      usage: 'opengui <interface> [json] (JSON can also be read from stdin)',
-      commands: ['--help', '--version', '--interfaces', '--doctor', '--setup-adb-server', '--shutdown-daemon'],
+      usage: 'opengui [--compact] <interface> [json] (JSON can also be read from stdin)',
+      commands: ['--help', '--version', '--interfaces', '--doctor', '--setup-adb-server', '--shutdown-daemon', '--compact'],
       interfaces: OPENGUI_CODEX_TOOLS.map(tool => tool.name),
       platform: 'Local macOS arm64/x64 only. Use a dedicated non-production device environment.',
     }
@@ -86,7 +88,7 @@ export async function runCli(argv: readonly string[], signal = new AbortControll
   const endpoint = await ensureDaemon(fileURLToPath(import.meta.url), dataDirectory(), AbortSignal.any([signal, AbortSignal.timeout(15_000)]))
   const result = await sendRequest(endpoint, request(name, args as Record<string, unknown>), signal)
   if (!result.ok) throw new Error(result.error)
-  return result.result
+  return compact ? compactOutput(result.result) : result.result
 }
 
 async function readStdin(): Promise<string> {
