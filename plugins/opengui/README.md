@@ -1,11 +1,17 @@
 # OpenGUI for Codex
 
-Standalone screenshot-guided Android control for **local Codex on macOS arm64/x64**.
+Standalone screenshot-guided Android / HarmonyOS control for **local Codex on macOS arm64/x64**.
 This is a testing candidate, not a stable or directory-approved release.
 
 It includes a control Skill, local CLI/daemon, macOS ADB executable, and a read-only
 device wall. It does not depend on, modify, install, update, or reload DSH.
 See [source provenance](SOURCE.md) and [privacy](docs/privacy.md).
+
+## HarmonyOS support in this fork
+
+The standalone host supports HDC + UiTest through `OPENGUI_PLATFORM=harmonyos`.
+Use a local source build and see [HarmonyOS setup and validation](docs/harmonyos.md).
+This does not add HarmonyOS to the separate DSH, WorkBuddy, or Android client/server paths.
 
 ## Install on macOS
 

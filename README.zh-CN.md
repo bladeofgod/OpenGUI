@@ -1,3 +1,5 @@
+> 本 fork 已在独立电脑端插件中增加 **鸿蒙 HDC + UiTest 适配**，使用范围与接入方式见 [鸿蒙驱动文档](plugins/opengui/docs/harmonyos.md)。
+
 <p align="center">
   <strong>语言切换：</strong><a href="./README.md">English</a> | <a href="./README.zh-CN.md">简体中文</a> | <a href="./README.ja-JP.md">日本語</a>
 </p>

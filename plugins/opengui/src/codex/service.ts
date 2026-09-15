@@ -18,10 +18,14 @@ import { OwnedForwardRegistry } from '../forward-registry.ts'
 import { PhoneController } from '../phone-controller.ts'
 import type { RawPhoneObservation } from '../phone-controller.ts'
 import { resolveScrcpyAsset, ScrcpyInstaller, ScrcpyTextInput } from '../scrcpy.ts'
+import { LocalHarmonyPhoneHost } from '../harmony-host.ts'
+import { devicePlatform } from '../platform.ts'
+import type { ActionAssessment, UiLayout } from '../device-driver.ts'
+import { MAX_DEVICES, MAX_OPERATIONS } from '../phone-limits.ts'
 import { encodeCodexPhoneScreenshot } from './screenshot.ts'
 
-export const CODEX_MAX_DEVICES = 4
-export const CODEX_MAX_OPERATIONS = 100
+export const CODEX_MAX_DEVICES = MAX_DEVICES
+export const CODEX_MAX_OPERATIONS = MAX_OPERATIONS
 const COMMAND_TIMEOUT_MS = 15_000
 
 export interface CodexDeviceInfo {
@@ -248,6 +252,8 @@ export interface CodexObservation {
   readonly width: number
   readonly height: number
   readonly foregroundPackage: string
+  readonly layout?: UiLayout
+  readonly actionAssessment?: ActionAssessment
   readonly screenshot: {
     readonly data: string
     readonly mimeType: 'image/jpeg'
@@ -276,7 +282,7 @@ export class CodexOpenGuiService {
   private readonly onSessionClosed: (sessionId: string) => Promise<void>
 
   constructor(options: CodexOpenGuiServiceOptions = {}) {
-    this.host = options.host ?? new LocalAdbPhoneHost()
+    this.host = options.host ?? (devicePlatform() === 'harmonyos' ? new LocalHarmonyPhoneHost() : new LocalAdbPhoneHost())
     this.createSessionId = options.createSessionId ?? randomUUID
     this.now = options.now ?? Date.now
     this.onSessionClosed = options.onSessionClosed ?? (async () => {})
@@ -465,6 +471,8 @@ export class CodexOpenGuiService {
       width: value.width,
       height: value.height,
       foregroundPackage: value.foregroundPackage,
+      ...(value.layout === undefined ? {} : { layout: value.layout }),
+      ...(value.actionAssessment === undefined ? {} : { actionAssessment: value.actionAssessment }),
       screenshot: {
         data: value.image.data.toString('base64'),
         mimeType: 'image/jpeg',

@@ -1,6 +1,6 @@
 # OpenGUI Codex 独立插件
 
-仅支持 macOS arm64/x64 上的本地 Codex，用截图驱动 Android 操作并提供只读设备墙。
+仅支持 macOS arm64/x64 上的本地 Codex，用截图驱动 Android / HarmonyOS 操作并提供只读设备墙。
 当前是候选源码包，不代表已发布或通过公开目录审核。
 
 - 与生产 DSH 完全分开维护源码、依赖、版本和发布流程，不改动或重载 DSH。
@@ -8,6 +8,12 @@
 - 最多冻结四台测试设备；只读监控不占控制锁。
 - 发送、发布、购买、删除需要对话确认和原生单次确认。
 - 取消/关闭清理会话截图；空闲会话 30 分钟过期，空闲守护进程 5 分钟退出。
+
+## 本 fork 的鸿蒙适配
+
+鸿蒙功能位于本目录的电脑端 CLI/驱动，使用本机 DevEco Studio 的 HDC 和手机内置 UiTest。
+源码构建后设置 `OPENGUI_PLATFORM=harmonyos`，详见 [鸿蒙接入与验证](docs/harmonyos.md)。
+现有 DSH、WorkBuddy 和 Android APK/服务端链路的鸿蒙移植不属于此实现。
 
 ## 普通用户安装
 
