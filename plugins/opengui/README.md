@@ -3,6 +3,11 @@
 Standalone screenshot-guided Android / HarmonyOS control for **local Codex on macOS arm64/x64**.
 This is a testing candidate, not a stable or directory-approved release.
 
+The optional HarmonyOS `test-history-cleanup-v1` task grant permits only explicitly
+approved, session-created test-history cleanup. See the [grant contract](README.zh-CN.md#测试历史清理任务授权)
+for the private artifact schema, persistent consumption, revocation, and fail-closed
+scope checks. Sessions without a grant retain native one-action confirmation.
+
 It includes a control Skill, local CLI/daemon, macOS ADB executable, and a read-only
 device wall. It does not depend on, modify, install, update, or reload DSH.
 See [source provenance](SOURCE.md) and [privacy](docs/privacy.md).
@@ -96,8 +101,9 @@ Use returned opaque ids in `opengui_open_session`. Up to four devices can be
 frozen in a control session. `mode: "observe"` is read-only and does not reserve
 control locks. View the JPEG path returned by `opengui_observe` before issuing
 one `opengui_act`, then inspect the new frame. `--interfaces` describes exact
-arguments. Consequential actions require conversational confirmation and a native
-one-action dialog; caller-supplied approval booleans are rejected.
+arguments. Consequential actions normally require conversational confirmation and a native
+one-action dialog; the bounded test cleanup grant described above is the only exception.
+Caller-supplied approval booleans are rejected.
 
 Finish with `opengui_close_session` or `opengui_cancel`. Recover ids with
 `opengui_list_sessions`. Sessions expire after 30 idle minutes; wall polling

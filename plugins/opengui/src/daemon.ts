@@ -11,6 +11,7 @@ import { CodexOpenGuiService } from './codex/service.ts'
 import { callOpenGuiTool, isCodexObservation, requestedSideEffect, validateToolArguments } from './codex/tools.ts'
 import { confirmAction } from './confirmation.ts'
 import type { ConfirmAction } from './confirmation.ts'
+import { TaskCleanupGrants } from './task-cleanup-grant.ts'
 import { DAEMON_IDLE_MS, PROTOCOL_VERSION, VERSION, ObservationStore, daemonEndpoint, dataDirectory, privateDirectory } from './state.ts'
 
 export interface Request {
@@ -133,6 +134,8 @@ export async function startDaemon(options: DaemonOptions): Promise<{ endpoint: s
   await observations.prune()
   const service = options.service ?? new CodexOpenGuiService({ onSessionClosed: id => observations.remove(id) })
   const confirm = options.confirm ?? confirmAction
+  const grants = new TaskCleanupGrants(options.root)
+  const grantBusy = new Set<string>()
   const sockets = new Set<Socket>()
   const operations = new Set<Promise<void>>()
   // CLI connections are short-lived; ownership follows the host's stable task id.
@@ -174,6 +177,7 @@ export async function startDaemon(options: DaemonOptions): Promise<{ endpoint: s
       if (!input.includes('\n')) return
       received = true
       const operation = (async () => {
+        let grantSession: string | undefined
         try {
           const value = JSON.parse(input.trim()) as Request
           if (value.name === '__ping__') {
@@ -195,12 +199,22 @@ export async function startDaemon(options: DaemonOptions): Promise<{ endpoint: s
           if (typeof sessionId === 'string' && owners.get(sessionId) !== value.owner) {
             throw new Error('opengui: session belongs to another Codex task or is unknown')
           }
+          if (typeof sessionId === 'string' && grants.has(sessionId) && ['opengui_act', 'opengui_observe'].includes(value.name)) {
+            if (grantBusy.has(sessionId)) throw new Error('opengui: test cleanup grant session is busy')
+            grantBusy.add(sessionId)
+            grantSession = sessionId
+          }
+          if (typeof sessionId === 'string' && ['opengui_cancel', 'opengui_close_session'].includes(value.name)) grants.remove(sessionId)
+          const claimedGrant = value.name === 'opengui_open_session' && value.args.testCleanupGrant !== undefined
+            ? await grants.claim(value.owner, devicePlatform(), value.args) : undefined
           lastRequest = Date.now()
           if (['opengui_act', 'opengui_observe'].includes(value.name)) ownedSession = String(value.args.sessionId)
           let confirmed = false
           if (value.name === 'opengui_act') {
             const effect = requestedSideEffect(value.args)
-            if (effect !== 'none') {
+            if (grantSession) {
+              confirmed = await grants.before(grantSession, value.args)
+            } else if (effect !== 'none') {
               confirmed = await confirm(effect, structuredClone(value.args), signal)
               if (!confirmed) throw new Error('opengui: user declined this action')
             }
@@ -212,26 +226,33 @@ export async function startDaemon(options: DaemonOptions): Promise<{ endpoint: s
           if (value.name === 'opengui_open_session') {
             ownedSession = (result as { sessionId: string }).sessionId
             owners.set(ownedSession, value.owner)
+            if (claimedGrant) grants.bind(ownedSession, claimedGrant)
           }
           signal.throwIfAborted()
+          if (isCodexObservation(result)) grants.observe(result)
           const materialized = isCodexObservation(result) ? await observations.save(result) : result
           if (isCodexObservation(result) && service.listSessions().find(item => item.sessionId === result.sessionId)?.state !== 'active') {
             await observations.remove(result.sessionId)
             throw new Error('opengui: session ended before its screenshot was delivered')
           }
-          if (value.name === 'opengui_close_session' || value.name === 'opengui_cancel') await observations.remove(String(value.args.sessionId))
+          if (value.name === 'opengui_close_session' || value.name === 'opengui_cancel') {
+            await observations.remove(String(value.args.sessionId))
+            grants.remove(String(value.args.sessionId))
+          }
           signal.throwIfAborted()
           respond({ ok: true, result: materialized })
         } catch (error) {
+          if (grantSession) grants.invalidate(grantSession)
           if (signal.aborted && ownedSession) {
             await service.cancel(ownedSession).catch(() => {})
             await observations.remove(ownedSession).catch(() => {})
           }
           respond({ ok: false, error: error instanceof Error ? error.message : String(error) })
         } finally {
+          if (grantSession) grantBusy.delete(grantSession)
           lastRequest = Date.now()
           const retained = new Set(service.listSessions().map(item => item.sessionId))
-          for (const id of owners.keys()) if (!retained.has(id)) owners.delete(id)
+          for (const id of owners.keys()) if (!retained.has(id)) { owners.delete(id); grants.remove(id) }
         }
       })()
       operations.add(operation)

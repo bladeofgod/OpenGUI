@@ -1,4 +1,5 @@
 import type { CodexOpenGuiService, CodexObservation, ExternalSideEffect } from './service.ts'
+import { cleanupGrantReference } from '../task-cleanup-grant.ts'
 
 export interface CodexToolDefinition {
   readonly name: string
@@ -118,6 +119,12 @@ export const OPENGUI_CODEX_TOOLS: readonly CodexToolDefinition[] = [
       properties: {
         deviceIds: { type: 'array', uniqueItems: true, minItems: 1, maxItems: 4, items: { type: 'string', minLength: 1 } },
         mode: { type: 'string', enum: ['control', 'observe'], default: 'control' },
+        testCleanupGrant: {
+          type: 'object', additionalProperties: false,
+          properties: { grantId: { type: 'string', minLength: 32, maxLength: 32 }, runId: { type: 'string', minLength: 1, maxLength: 96 }, specDigest: { type: 'string', minLength: 64, maxLength: 64 } },
+          required: ['grantId', 'runId', 'specDigest'],
+          description: 'Reference a private, task-owned test history cleanup or single-text recovery grant for this single-device control session.',
+        },
       },
     },
     outputSchema: sessionSchema,
@@ -245,6 +252,9 @@ export function validateToolArguments(name: string, args: unknown): void {
   const definition = OPENGUI_CODEX_TOOLS.find(tool => tool.name === name)
   if (!definition) throw new Error('opengui: unknown tool ' + name)
   validateValue(args, definition.inputSchema, 'arguments')
+  if (name === 'opengui_open_session' && (args as Record<string, unknown>).testCleanupGrant !== undefined) {
+    cleanupGrantReference((args as Record<string, unknown>).testCleanupGrant)
+  }
 }
 
 function validateValue(value: unknown, schema: Record<string, unknown>, path: string): void {
