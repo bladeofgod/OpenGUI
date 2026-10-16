@@ -1,8 +1,13 @@
-# 剩余两份 PR 的网页提交入口
+# 鸿蒙与精简输出 PR 投稿记录
 
-两份现在都提交到 `Core-Mate/OpenGUI` 的 `main`。依赖已写入正文，维护者可按顺序审核和合并。
+两份均已发布到 `Core-Mate/OpenGUI` 的 `main`，本轮已核对 source 分支、SHA、正文依赖及独立比较链接。
 
-登录 `bladeofgod` 后点击对应入口，检查自动填好的标题与正文，再点击绿色 **Create pull request**。
+| PR | 内容 | 依赖 |
+| --- | --- | --- |
+| [#142](https://github.com/Core-Mate/OpenGUI/pull/142) | 鸿蒙 HDC 与 UiTest 驱动 | #141 |
+| [#143](https://github.com/Core-Mate/OpenGUI/pull/143) | 精简输出与完整私有 JSON | #141、#142 |
+
+审核请使用上表的现有 PR。下面保留提交时的预填入口、标题、分支和比较范围。
 
 ## 鸿蒙驱动
 
@@ -22,10 +27,10 @@
 - 当前对 `main` 的比较应显示：5 个提交、41 个文件；独立功能差异为 12 个文件。
 - [核对或手工复制正文](03-compact-output.md)：从 `## What changed?` 起复制。
 
-## 提交顺序
+## 已提交的依赖顺序
 
 1. 已发布的原生确认修复：[PR #141](https://github.com/Core-Mate/OpenGUI/pull/141)。
-2. 提交上面的鸿蒙驱动 PR。
-3. 提交上面的精简输出 PR，其正文已用完整分支名说明鸿蒙前置依赖，不猜测 PR 编号。
+2. 已发布的鸿蒙驱动：[PR #142](https://github.com/Core-Mate/OpenGUI/pull/142)。
+3. 已发布的精简输出：[PR #143](https://github.com/Core-Mate/OpenGUI/pull/143)，其正文用完整分支名标识的鸿蒙前置现在对应 #142。
 
-创建后以 GitHub 返回的实际 PR 链接为准。前置尚未合入时，页面会包含前置差异；各正文里的独立比较链接可用于聚焦审查。
+本轮查询三份均为 open、非 Draft、未合并。前置尚未合入时，页面会包含前置差异；各正文里的独立比较链接可用于聚焦审查。

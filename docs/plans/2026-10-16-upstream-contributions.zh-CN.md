@@ -35,11 +35,18 @@
 按用户最新要求，三份 PR 现在全部向上游 `main` 提交，维护者按依赖顺序审核、
 合并。用户自行通过 GitHub 网页发布，不等待前置 PR 合入后才投稿。
 
-原生确认已发布为 [PR #141](https://github.com/Core-Mate/OpenGUI/pull/141)，
-截至本轮查询仍为 open、未合并。剩余两份正文已写明依赖，另附各自功能的独立
-比较链接。鸿蒙对 `main` 当前显示 3 提交、37 文件，其中本功能独立差异为 36
-文件；精简输出对 `main` 显示 5 提交、41 文件，本功能独立差异为 12 文件。
-前置合入后，再同步后续分支基线以更新比较范围。
+三份现均已发布，以下状态为 2026-10-16 本轮 GitHub API 核对结果：
+
+| PR | 内容 | 源码头提交 | 状态 | 提交/文件数 |
+| --- | --- | --- | --- | --- |
+| [#141](https://github.com/Core-Mate/OpenGUI/pull/141) | 原生确认修复 | `34ec75c` | open，非 Draft，未合并 | 1 / 3 |
+| [#142](https://github.com/Core-Mate/OpenGUI/pull/142) | 鸿蒙驱动 | `a4eaac0` | open，非 Draft，未合并 | 3 / 37 |
+| [#143](https://github.com/Core-Mate/OpenGUI/pull/143) | 精简输出与私有 JSON | `3d94a02` | open，非 Draft，未合并 | 5 / 41 |
+
+已核对三份 source 分支及 SHA 均与 fork 候选一致，目标均为 `Core-Mate:main`。
+#142 正文依赖 #141；#143 正文依赖 #141 及鸿蒙驱动分支，该分支已对应 #142。
+两份均包含各自功能的独立比较链接：鸿蒙为 36 文件，精简输出为 12 文件。
+维护者按 #141 → #142 → #143 的顺序审核、合并；前置合入后再同步后续分支基线。
 
 候选分支不包含本项目 1.1.8 验收归档、测试清理授权、机器缓存或原始设备画面。
 
@@ -67,6 +74,14 @@ git diff feat/harmonyos-driver-contribution...feat/compact-observation-contribut
 上游 CI 使用 Node.js 22.23.2、pnpm 11.19.0，Linux/macOS arm64/macOS Intel
 三平台结果仍须在远端单独获取。本机通过不等同于远端 CI 通过。
 
+三份投稿的 CI 工作流已被触发，但本轮查询的结论均为 `action_required`，
+尚无 check-run 测试结果；不能标为 CI 通过或测试失败。对应运行记录：
+[#141](https://github.com/Core-Mate/OpenGUI/actions/runs/38846161707)、
+[#142](https://github.com/Core-Mate/OpenGUI/actions/runs/38848600659)、
+[#143](https://github.com/Core-Mate/OpenGUI/actions/runs/38848709742)。
+外部 fork 的运行授权由有写权限的维护者处理，流程参见
+[GitHub 官方说明](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/approve-runs-from-forks)。
+
 集成分支同时补回一项宿主范围修正：CLI 集成测试只在受支持的 macOS 上执行，
 避免 Linux CI 因产品本身拒绝 Linux 控制而失败。对应 daemon 文件 11 项定向
 测试通过；不改变生产控制逻辑。
@@ -82,10 +97,10 @@ git diff feat/harmonyos-driver-contribution...feat/compact-observation-contribut
 ## 投稿材料与后续顺序
 
 1. 原生确认已提交为 #141，准备材料见[原生确认草稿](../contributions/01-native-confirmation.md)。
-2. 直接提交[鸿蒙 PR](../contributions/02-harmonyos-driver.md)，把架构衔接问题写入
-   PR 供作者审核；[能力提案](../contributions/harmonyos-proposal.md)作为背景材料。
-3. 直接提交[精简输出 PR](../contributions/03-compact-output.md)，明确依赖鸿蒙
-   分支和 #141。两份预填网页入口见[剩余 PR 提交入口](../contributions/submission-links.md)。
+2. 鸿蒙驱动已提交为 #142，材料见[鸿蒙 PR 正文](../contributions/02-harmonyos-driver.md)，
+   架构衔接问题已写入 Notes 供作者审核；[能力提案](../contributions/harmonyos-proposal.md)作为背景材料。
+3. 精简输出已提交为 #143，材料见[精简输出正文](../contributions/03-compact-output.md)，
+   依赖 #141 和 #142。两份网页投稿记录见[投稿记录](../contributions/submission-links.md)。
 4. 测试清理授权留在 fork，先按[独立设计提案](../contributions/cleanup-grant-proposal.md)
    讨论其通用性、授权主体及审查方式。
 

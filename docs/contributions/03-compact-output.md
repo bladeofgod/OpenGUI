@@ -1,8 +1,9 @@
 # PR 草稿：精简观察输出并保留完整私有证据
 
-候选：`feat/compact-observation-contribution`。目标：上游 `main`，现在即可提交。
-建议标题：`feat(codex): add compact observations with private JSON evidence`。
-复制下面五个模板章节作为正文；鸿蒙前置 PR 用分支名明确标识，未猜测编号。
+已发布：[PR #143](https://github.com/Core-Mate/OpenGUI/pull/143)。
+源码：`feat/compact-observation-contribution@3d94a02`，目标为上游 `main`。
+投稿标题：`feat(codex): add compact observations with private JSON evidence`。
+以下保留原投稿正文；其中鸿蒙前置分支现在对应 #142，实际审核以 GitHub 为准。
 
 ## What changed?
 

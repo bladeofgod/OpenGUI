@@ -1,8 +1,9 @@
 # PR 草稿：独立 Codex 插件接入鸿蒙截图驱动
 
-候选：`feat/harmonyos-driver-contribution`。目标：上游 `main`，现在即可提交。
-建议标题：`feat(codex): add HarmonyOS HDC and UiTest driver`。
-复制下面五个模板章节作为正文；依赖在正文中说明，不等待前置 PR 合并。
+已发布：[PR #142](https://github.com/Core-Mate/OpenGUI/pull/142)。
+源码：`feat/harmonyos-driver-contribution@a4eaac0`，目标为上游 `main`。
+投稿标题：`feat(codex): add HarmonyOS HDC and UiTest driver`。
+以下保留原投稿正文，实际发布格式及后续审核以 GitHub 为准。
 
 ## What changed?
 
