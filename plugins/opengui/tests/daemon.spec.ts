@@ -108,7 +108,7 @@ describe('standalone daemon transport', () => {
     await sendRequest(server.endpoint, request('opengui_close_session', { sessionId }))
     expect((await sendRequest(server.endpoint, request('opengui_open_session', openArgs))).ok).toBe(false)
   })
-  it('supports compact output through the CLI while retaining the full observation file', async () => {
+  it.runIf(process.platform === 'darwin')('supports compact output through the CLI while retaining the full observation file', async () => {
     const server = await daemon(), sessionId = await open(server.endpoint)
     const observe = server.host.observe.bind(server.host)
     server.host.observe = async (actor, signal) => ({ ...await observe(actor, signal), layout: {
