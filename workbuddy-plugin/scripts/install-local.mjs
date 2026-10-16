@@ -26,7 +26,7 @@ const packagesRoot = await realpath(join(stateRoot, 'packages'))
 assert(!relative(packagesRoot, packageDir).startsWith('..') && relative(packagesRoot, packageDir), 'Install from an immutable WorkBuddy version directory')
 const pkg = JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8'))
 assert.equal(pkg.name, 'opengui-mcp')
-assert.equal(pkg.version, '0.2.1')
+assert.equal(pkg.version, '0.4.1')
 assert.match(execFileSync(node, ['--version'], { encoding: 'utf8' }).trim(), /^v(?:22\.(?:19|2\d|[3-9]\d)|2[4-9]\.|[3-9]\d\.)/)
 const quote = value => process.platform === 'win32' ? `'${value.replaceAll("'", "''")}'` : `'${value.replaceAll("'", `'"'"'`)}'`
 const command = `${quote(node)} ${quote(join(packageDir, 'lib', 'host-hook.js'))}`
@@ -50,13 +50,25 @@ for (const path of targets) await assertOwnedPath(path)
 const existingMcp = JSON.parse(original[0] ?? '{}').mcpServers?.opengui
 if (existingMcp) {
   const knownEntrypoints = [packageDir, previous.packageDir].filter(Boolean).map(path => join(path, 'lib', 'mcp.js'))
-  assert(Array.isArray(existingMcp.args) && existingMcp.args.length === 1 && knownEntrypoints.includes(existingMcp.args[0]),
-    'MCP_CONFLICT: an unrecognized opengui server already exists; preserve it and resolve the conflict explicitly')
+  const ownedStdio = (!existingMcp.type || existingMcp.type === 'stdio') && Array.isArray(existingMcp.args)
+    && existingMcp.args.length === 1 && knownEntrypoints.includes(existingMcp.args[0])
+  // Native installations record the exact server, including its authorization.
+  // A matching URL alone cannot establish ownership of a third-party entry.
+  const ownedHttp = previous.configRoot === root && previous.transport === 'http' && existingMcp.type === 'http'
+    && previous.nativeServerSha256 === createHash('sha256').update(JSON.stringify(existingMcp)).digest('hex')
+  assert(ownedStdio || ownedHttp,
+    `MCP_CONFLICT: unrecognized or edited opengui server in ${targets[0]}. No configuration files changed.\n`
+    + `Back up and inspect the configuration before retrying:\ncp ${quote(targets[0])} ${quote(`${targets[0]}.before-opengui-conflict-${Date.now()}`)}\n`
+    + `\${EDITOR:-vi} ${quote(targets[0])}\n`
+    + 'To keep the existing server, rename its mcpServers key from opengui to an unused name (for example opengui-existing); '
+    + 'or explicitly remove only that entry if it is no longer needed. Save, then rerun the installation command.')
 }
 const values = [
   JSON.stringify(mergeMcpConfig(JSON.parse(original[0] ?? '{}'), node, join(packageDir, 'lib', 'mcp.js')), null, 2) + '\n',
   JSON.stringify(mergeHostHooks(JSON.parse(original[1] ?? '{}'), command, previous.hookCommands ?? []), null, 2) + '\n',
-  await readFile(join(packageDir, 'lib', 'opengui-SKILL.md'), 'utf8'),
+  (await readFile(join(packageDir, 'lib', 'opengui-SKILL.md'), 'utf8')).replaceAll('(references.md)', `(${join(packageDir, 'lib', 'opengui-reference.md')})`)
+    .replaceAll('(installation.html)', `(<${join(packageDir, 'lib', 'opengui-installation.html')}>)`)
+    .replaceAll('(authorization.html)', `(<${join(packageDir, 'lib', 'opengui-authorization.html')}>)`),
 ]
 if (original.every((value, i) => value === values[i]) && previous.packageDir === packageDir && previous.configRoot === root) {
   console.log(JSON.stringify({ status: 'ALREADY_CONFIGURED', version: pkg.version, installState, configRoot: root, hostLoaded: 'unverified' }))
@@ -75,7 +87,8 @@ for (let i = 0; i < targets.length; i++) {
   backups.push({ path, backup: original[i] === undefined ? null : backup, installedSha256: createHash('sha256').update(values[i]).digest('hex') })
 }
 // Prepare all bytes and the recovery journal before switching any entry.
-// A live client must be stopped by the caller; never overwrite concurrent edits.
+// WorkBuddy can watch these files live. Preserve the compare-before-rename checks
+// so a simultaneous host or user edit wins instead of being overwritten.
 if (await optional(installState)) await copyFile(installState, `${installState}.before-${stamp}`)
 await assertStatePath()
 const journal = `${installState}.pending-${stamp}`

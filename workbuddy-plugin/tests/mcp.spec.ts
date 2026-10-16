@@ -1,3 +1,4 @@
+import { ReadyViewer } from './ready-viewer.ts'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
@@ -13,7 +14,7 @@ afterEach(async () => { for (const close of cleanup.splice(0).reverse()) await c
 
 async function client(capabilities: ClientCapabilities = {}, action: 'accept' | 'decline' | 'cancel' = 'accept', confirm = true) {
   const [a, b] = InMemoryTransport.createLinkedPair()
-  const service = new WorkBuddyOpenGuiService({ host: new FakeHost() })
+  const service = new WorkBuddyOpenGuiService({ viewers: new ReadyViewer(), host: new FakeHost() })
   const connection = { call: vi.fn((name, args, signal) => callOpenGuiTool(service, name, args, signal)), close: vi.fn() }
   const server = await startMcp(b, async () => connection)
   const client = new Client({ name: 'workbuddy-test', version: '1' }, { capabilities })
@@ -24,6 +25,29 @@ async function client(capabilities: ClientCapabilities = {}, action: 'accept' | 
 }
 
 describe('standard MCP transport', () => {
+  it('delivers ordered request-scoped progress only when requested and ignores late callbacks', async () => {
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    let late: ((message: string) => void) | undefined
+    const call = vi.fn(async (_name, _args, _signal, progress) => {
+      late = progress
+      progress?.('等待开始'); progress?.('内容待审核')
+      return { devices: [] }
+    })
+    const server = await startMcp(b, async () => ({ call, close() {} }))
+    const c = new Client({ name: 'progress-test', version: '1' })
+    cleanup.push(() => server.close(), () => c.close())
+    await c.connect(a)
+    const notices: unknown[] = []
+    const result = await c.callTool({ name: 'opengui_list_devices', arguments: {} }, undefined, { onprogress: value => notices.push(value) })
+    expect(result.structuredContent).toEqual({ devices: [] })
+    expect(notices).toMatchObject([{ progress: 1, message: '等待开始' }, { progress: 2, message: '内容待审核' }])
+    late?.('Late event')
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(notices).toHaveLength(2)
+    await c.callTool({ name: 'opengui_list_devices', arguments: {} })
+    expect(late).toBeUndefined()
+  })
+
   it('reconnects the next independent call after an established connection closes', async () => {
     const [a, b] = InMemoryTransport.createLinkedPair()
     let disconnect: (() => void) | undefined
@@ -58,6 +82,7 @@ describe('standard MCP transport', () => {
     const c = new Client({ name: 'recovery-test', version: '1' })
     cleanup.push(() => server.close(), () => c.close())
     await c.connect(a)
+    await c.listTools()
     expect((await c.callTool({ name: 'opengui_list_devices', arguments: {} })).isError).toBe(true)
     expect(connection.call).not.toHaveBeenCalled()
     const result = await c.callTool({ name: 'opengui_list_devices', arguments: {} })
@@ -75,10 +100,15 @@ describe('standard MCP transport', () => {
     const c = new Client({ name: 'no-replay-test', version: '1' })
     cleanup.push(() => server.close(), () => c.close())
     await c.connect(a)
+    await c.listTools()
     const result = await c.callTool({ name: 'opengui_act', arguments: {
       sessionId: 'session-a', observationId: 'observation-a', action: 'key', key: 'Home',
     } })
     expect(result.isError).toBe(true)
+    expect(result.structuredContent).toBeUndefined()
+    expect(JSON.parse((result.content[0] as { text: string }).text)).toMatchObject({
+      code: 'connection_lost', recovery: 'reconnect',
+    })
     expect(connect).toHaveBeenCalledTimes(1)
     expect(connection.call).toHaveBeenCalledTimes(1)
   })
@@ -87,7 +117,7 @@ describe('standard MCP transport', () => {
     const { client: c, connection } = await client()
     const listed = await c.listTools()
     expect(listed.tools.map(tool => tool.name)).toEqual(OPENGUI_WORKBUDDY_TOOLS.map(tool => tool.name))
-    expect(c.getServerVersion()).toMatchObject({ name: 'opengui-workbuddy', version: '0.2.1' })
+    expect(c.getServerVersion()).toMatchObject({ name: 'opengui-workbuddy', version: '0.4.1' })
     expect(connection.call).not.toHaveBeenCalled()
   })
 

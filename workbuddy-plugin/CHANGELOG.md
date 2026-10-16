@@ -1,3 +1,30 @@
+## 0.4.1
+
+- Recognize receipt-owned HTTP MCP installations during upgrades to the public stdio runtime.
+- Preserve unknown or edited MCP entries and provide explicit backup/edit/retry instructions.
+
+# OpenGUI for WorkBuddy 0.4.0 public testing
+
+- Publish the task home, workbench, account/model selection, takeover, content review, and report runtime as a distinct plugin version.
+- Publish direct-download launcher and payload assets with checksums under the same runtime release.
+- Preserve the user's Finder double-click and Terminal confirmation, then verify installation after “已安装完成”.
+- Keep old releases immutable and require real-device acceptance before stable publication.
+
+# OpenGUI for WorkBuddy 0.3.1 candidate
+
+- Allow WorkBuddy 5.5.6+ to stay open during a verified first installation or idle reconfiguration.
+- Use WorkBuddy's MCP file watcher, `/hooks` review flow, and `/skills` discovery instead of requiring Command-Q by default.
+- Keep older hosts on the restart path and block upgrades while an old OpenGUI broker still owns tasks or displays.
+- Preserve atomic configuration writes, unrelated MCP/Hooks, immutable packages, receipts, and rollback behavior.
+
+# OpenGUI for WorkBuddy 0.3.0 candidate
+
+- Add read-only H.264 video Viewers, visible first-frame gating, bounded reconnection and independent page/control lifecycles.
+- Open the current task's right browser through built-in `present_files`; keep native scrcpy as an explicit compatibility entry.
+- Prepare scrcpy 4.1 during installation; use protocol 8 and retain prior packages and recovery receipts.
+- Fix native WorkBuddy 5.5.3 Hook binding by emitting `updatedInput` alongside the legacy `modifiedInput` field.
+- Add real-decoder browser checks, four-source synthetic soak tooling and installed-host acceptance records.
+
 # OpenGUI for WorkBuddy 0.2.1 candidate
 
 - Discover the selected WorkBuddy bundle and its product-specific configuration root before downloading packages.

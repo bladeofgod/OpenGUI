@@ -1,3 +1,4 @@
+import { ReadyViewer } from './ready-viewer.ts'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import sharp from 'sharp'
 import { WorkBuddyOpenGuiService, createControlTask } from '../src/service.ts'
@@ -10,7 +11,7 @@ afterEach(async () => { vi.useRealTimers(); for (const close of cleanup.splice(0
 const signal = () => AbortSignal.timeout(5000)
 function fixture(leaseMs = 600_000) {
   const host = new FakeHost()
-  const service = new WorkBuddyOpenGuiService({ host, leaseMs })
+  const service = new WorkBuddyOpenGuiService({ viewers: new ReadyViewer(), host, leaseMs })
   cleanup.push(() => service.dispose())
   return { host, service }
 }
@@ -43,6 +44,17 @@ describe('task execution evidence', () => {
     await vi.waitFor(() => expect(service.snapshotSession(session.sessionId).state).toBe('closed'))
     expect(service.snapshotSession(session.sessionId).result?.outcome).toBe('blocked')
     expect(host.released).toEqual(['serial-a'])
+  })
+  it('keeps the lease while a person handles the phone, then releases a resumed idle task', async () => {
+    const { host, service } = fixture(40)
+    const session = await service.openSession(['phone-a'], signal())
+    await service.requestHandoff(session.sessionId, 'otp', '请在手机上输入验证码', 0, signal())
+    await new Promise(resolve => setTimeout(resolve, 150))
+    expect(service.snapshotSession(session.sessionId).state).toBe('active')
+    expect(host.released).toEqual([])
+    await service.observe(session.sessionId, undefined, signal()).catch(() => undefined)
+    await service.cancel(session.sessionId)
+    expect(service.snapshotSession(session.sessionId).state).toBe('cancelled')
   })
   it('retains the logical execution actor but revokes old observations on recovery', async () => {
     const { host, service } = fixture()

@@ -51,7 +51,7 @@ describe('standalone launcher installation contract', () => {
   it('prints help and version without approval, download, or state creation', async () => {
     const f = await fixture()
     expect((await f.run(['--help'], { TEST_OS: 'Linux' })).stdout).toContain('OpenGUI for Codex')
-    expect((await f.run(['--version'])).stdout.trim()).toBe('0.1.0')
+    expect((await f.run(['--version'])).stdout.trim()).toBe('0.2.0')
     await expect(readdir(f.data)).rejects.toMatchObject({ code: 'ENOENT' })
   })
   it('installs a verified runtime, translates setup to doctor, and reuses the cache', async () => {
@@ -87,6 +87,20 @@ describe('standalone launcher installation contract', () => {
     const results = await Promise.all([f.run(), f.run(), f.run()])
     expect(results.every(result => result.stdout.includes('--doctor'))).toBe(true)
     expect(await f.events()).toBe('approval\ndownload\n')
+  })
+  it('shares one verified runtime across isolated CODEX_HOME directories', async () => {
+    const f = await fixture()
+    const home = join(f.root, 'home')
+    const isolated = (name: string) => f.run(['--interfaces'], {
+      OPENGUI_CODEX_DATA_DIR: '',
+      HOME: home,
+      CODEX_HOME: join(home, name),
+    })
+    expect((await isolated('task-a')).stdout).toContain('--interfaces')
+    expect((await isolated('task-b')).stdout).toContain('--interfaces')
+    expect(await f.events()).toBe('approval\ndownload\n')
+    expect(await readdir(join(home, '.codex', 'opengui-codex', 'runtime'))).toEqual(['node-v22.23.2-darwin-arm64'])
+    await expect(readdir(join(home, 'task-a', 'opengui-codex', 'runtime'))).rejects.toMatchObject({ code: 'ENOENT' })
   })
   it('rejects unsafe state roots and unsupported platforms before setup', async () => {
     const f = await fixture()

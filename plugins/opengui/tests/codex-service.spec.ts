@@ -1,3 +1,4 @@
+import { ReadyViewer } from './ready-viewer.ts'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ObservationId } from '../src/adb.ts'
 import { CodexOpenGuiService } from '../src/codex/service.ts'
@@ -67,12 +68,31 @@ afterEach(async () => { await Promise.all(services.splice(0).map(service => serv
 
 function service(host = new FakeHost()): CodexOpenGuiService {
   let nextSession = 1
-  const value = new CodexOpenGuiService({ host, createSessionId: () => `session-${nextSession++}` })
+  const value = new CodexOpenGuiService({ viewers: new ReadyViewer(), host, createSessionId: () => `session-${nextSession++}` })
   services.push(value)
   return value
 }
 
 describe('Codex OpenGUI session service', () => {
+  it('keeps HarmonyOS screenshot sessions usable without an Android video viewer', async () => {
+    const previousPlatform = process.env.OPENGUI_PLATFORM
+    process.env.OPENGUI_PLATFORM = 'harmonyos'
+    try {
+      const value = new CodexOpenGuiService({ host: new FakeHost() })
+      services.push(value)
+      const signal = new AbortController().signal
+      const opened = await value.openSession(['phone-a'], signal)
+      expect(opened.deviceWallUrl).toMatch(/^http:\/\/127\.0\.0\.1:/u)
+      const observed = await value.observe(opened.sessionId, undefined, signal)
+      expect(observed.deviceId).toBe('phone-a')
+      await expect(value.openViewer(['phone-a'], signal)).rejects.toThrow('video_unavailable_for_harmonyos')
+      await expect(value.openSession(['phone-b'], signal, 'control', 'local', 'android-viewer')).rejects.toThrow('do not accept a video viewerId')
+    } finally {
+      if (previousPlatform === undefined) delete process.env.OPENGUI_PLATFORM
+      else process.env.OPENGUI_PLATFORM = previousPlatform
+    }
+  })
+
   it('lists authorization state and freezes a one-phone session', async () => {
     const value = service()
     expect(await value.listDevices(new AbortController().signal)).toContainEqual(expect.objectContaining({ id: 'locked', authorized: false }))

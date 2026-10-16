@@ -2,6 +2,24 @@ import { describe, expect, it, vi } from 'vitest'
 import { handleHostHook, normalizeHookTool } from '../src/host-hook.ts'
 
 describe('WorkBuddy native hook adapter', () => {
+  it('does not start a broker for repository installation or maintenance requests', async () => {
+    const connection = { hostEvent: vi.fn(async () => ({})), close: vi.fn() }
+    const connect = vi.fn(async () => connection)
+    for (const prompt of ['安装 https://github.com/Core-Mate/OpenGUI', 'Install https://github.com/Core-Mate/OpenGUI into WorkBuddy', '请升级 OpenGUI 插件', 'Explain OpenGUI installation']) {
+      await handleHostHook({ hook_event_name: 'UserPromptSubmit', session_id: 'installer', prompt }, connect)
+      expect(connect).toHaveBeenLastCalledWith(false)
+      expect(connection.hostEvent.mock.calls.at(-1)?.[0]).not.toHaveProperty('prompt')
+    }
+  })
+  it('preserves explicit native skill invocation formats', async () => {
+    const connection = { hostEvent: vi.fn(async () => ({})), close: vi.fn() }
+    const connect = vi.fn(async () => connection)
+    for (const prompt of ['@opengui', '@skill:opengui Open Settings', '/opengui Open Settings', 'opengui \uFEFF Open Settings', 'Please @opengui open Settings']) {
+      await handleHostHook({ hook_event_name: 'UserPromptSubmit', session_id: 'phone-task', prompt }, connect)
+      expect(connect).toHaveBeenLastCalledWith(true)
+      expect(connection.hostEvent.mock.calls.at(-1)?.[0]).toMatchObject({ prompt })
+    }
+  })
   it.each([false, true])('injects a binding into deferred parameters without changing host permissions (string=%s)', async stringify => {
     const args = { sessionId: 'own-session' }
     const event = { hook_event_name: 'PreToolUse', session_id: 'native-host-id', tool_name: 'DeferExecuteTool', tool_input: {
@@ -10,9 +28,9 @@ describe('WorkBuddy native hook adapter', () => {
     const connection = { hostEvent: vi.fn(async () => ({ hostContext: 'single-use' })), close: vi.fn() }
     const result = await handleHostHook(event, async () => connection)
     const expected = { ...args, hostContext: 'single-use' }
-    expect(result).toEqual({ hookSpecificOutput: { hookEventName: 'PreToolUse', modifiedInput: {
-      ...event.tool_input, params: stringify ? JSON.stringify(expected) : expected,
-    } } })
+    const updated = { ...event.tool_input, params: stringify ? JSON.stringify(expected) : expected }
+    // WorkBuddy 5.5.3 ToolHookManager reads updatedInput; older adapters read modifiedInput.
+    expect(result).toEqual({ hookSpecificOutput: { hookEventName: 'PreToolUse', updatedInput: updated, modifiedInput: updated } })
     expect(JSON.stringify(result)).not.toContain('permissionDecision')
     expect(connection.hostEvent).toHaveBeenCalledWith(expect.objectContaining({ session_id: 'native-host-id', tool_name: 'opengui_observe', tool_input: args }), expect.any(AbortSignal))
     expect(connection.close).toHaveBeenCalledTimes(1)
