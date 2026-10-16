@@ -87,3 +87,11 @@ HDC 来自本机 SDK，本实现不分发 HDC、不安装手机代理，也不�
 接口依据：[UiTest 官方文档](https://github.com/openharmony/docs/blob/master/zh-cn/application-dev/application-test/uitest-guidelines.md)、[HDC 官方文档](https://github.com/openharmony/docs/blob/master/zh-cn/application-dev/dfx/hdc.md)。
 
 合入上游前的验证范围及复现步骤见 [设备验证说明](harmonyos-testing.md)。
+
+## 精简观察输出
+
+在接口名前加 `--compact`，保留聚焦输入、布局稳定性、授权状态和截图坐标。
+`observationPath` 对应完整私有 JSON，可按需查询字段；精简节点不能用来判定
+元素不存在，也不能替代截图判断。默认输出保持完整。完整 JSON 与截图在
+会话关闭、取消及过期清理时一并删除；升级源码前先结束旧会话和旧守护进程。
+见[输出及证据生命周期](compact-observations.md)。

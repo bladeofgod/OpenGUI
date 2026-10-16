@@ -85,3 +85,12 @@ See [verification and limits](harmonyos-testing.md) and the
 [Chinese guide](harmonyos.zh-CN.md). The implementation relies on the official
 [UiTest](https://github.com/openharmony/docs/blob/master/zh-cn/application-dev/application-test/uitest-guidelines.md)
 and [HDC](https://github.com/openharmony/docs/blob/master/zh-cn/application-dev/dfx/hdc.md) interfaces.
+
+## Compact observations
+
+Pass `--compact` before the interface name to retain focused input nodes, layout
+stability, permission state and screenshot coordinates without printing the full
+layout. `observationPath` points to an owner-readable JSON containing the complete
+observation. Read only the fields needed and still inspect the screenshot.
+Default output remains complete; results without layouts are not shortened.
+See [output and evidence lifecycle](compact-observations.md).
