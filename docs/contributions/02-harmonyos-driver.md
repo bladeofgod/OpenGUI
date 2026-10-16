@@ -1,41 +1,34 @@
 # PR 草稿：独立 Codex 插件接入鸿蒙截图驱动
 
-候选：`feat/harmonyos-driver-contribution`。前置：原生确认修复。
-正式投稿前确认共享运行时的架构落点；前置合入后更新目标 `main`。
+候选：`feat/harmonyos-driver-contribution`。目标：上游 `main`，现在即可提交。
+建议标题：`feat(codex): add HarmonyOS HDC and UiTest driver`。
+复制下面五个模板章节作为正文；依赖在正文中说明，不等待前置 PR 合并。
 
 ## What changed?
 
-为独立 Codex 插件增加可选的 `OPENGUI_PLATFORM=harmonyos`，通过本机 SDK
-HDC 和手机 UiTest 完成发现、观察、输入及导航。提取平台驱动接口，Android
-保留原有传输与视频首帧门槛。鸿蒙使用截图会话，不使用 scrcpy 视频入口。
+**Depends on #141.** This stacked PR adds optional `OPENGUI_PLATFORM=harmonyos` support to the standalone Codex plugin using local SDK HDC and device UiTest.
 
-增加平台隔离、临时文件清理、辅助布局稳定性检查与输入结果分类，以及通用
-中英文使用说明和设备验证记录。控件树不代替截图判断可见目标。
+The driver covers discovery, screenshots, advisory layouts, input, navigation and owned artifact cleanup. Android remains the default and retains its video-readiness gate; HarmonyOS uses screenshot sessions.
+
+The current `main` comparison includes the prerequisite confirmation fix: 3 commits and 37 files. The [HarmonyOS-only comparison](https://github.com/bladeofgod/OpenGUI/compare/fix/native-confirmation-reply...feat/harmonyos-driver-contribution) isolates this feature's 36 files.
 
 ## Why?
 
-已有原生鸿蒙测试设备需要复用 Codex 的会话、观察与动作流程。独立插件层的
-可选驱动即可提供这项能力，范围不涉及 DSH、WorkBuddy、完整客户端或服务端。
+A native HarmonyOS test phone can reuse Codex sessions, device locks, budgets and screenshot-based GUI operation through an opt-in local driver. The scope is the standalone plugin.
 
 ## Testing
 
-- 全量首次 134/135 通过；一个未改动的启动器 fixture 超时，该文件 8 项定向
-  复验通过。未放宽项目测试超时时间。
-- TypeScript、CLI 构建、插件校验、打包、安装器语法和隔离打包安装通过。
-- 新增覆盖 HDC 错误回执、shell 转义、布局变化与限额、坐标缩放、输入路径、
-  取消及临时文件清理。默认 Android 和视频门槛保留回归验证。
-- 当前本机结果与远端 CI 的 Node/pnpm 版本不同，三平台 CI 待验证。
+- First full run: 134/135 passed; an unchanged launcher fixture timed out. All 8 launcher tests passed on focused retry without relaxing timeouts.
+- TypeScript/CLI build, validation, packaging, installer syntax and isolated packaged-install checks passed.
+- Coverage includes HDC acknowledgments, quoting, layout changes/limits, coordinate scaling, input, cancellation and cleanup.
+- Local macOS arm64 / Node.js 24.15.0 / pnpm 10.31.0 results are separate from remote pinned-version CI.
 
 ## Device verification
 
-2026-10-16，源码 `371481a`，TYR-AL00、HDC 3.2.0f：打开截图会话、观察桌面、
-滑到相邻桌面并看图确认、反向滑回并看图确认、关闭会话、检查截图已删除。
-未创建业务消息或删除其他数据。当前 API/UiTest 版本未单独记录，观察已通过
-驱动能力探测；历史 API 24/UiTest 验证与本次记录分开说明。
+2026-10-16, source `371481a`, TYR-AL00, HDC 3.2.0f: opened a screenshot session, observed the launcher, swiped to an adjacent page and back with image verification, then closed the session and verified screenshot removal. The capability probe passed; the current API/UiTest versions were not separately recorded.
 
-本轮不宣称 Android 真机、API 17 真机、多设备或长时间无人值守通过。
+Android hardware, API 17 hardware, multiple physical devices and unattended soak were not checked in this smoke test.
 
 ## Notes
 
-不包含项目专属验收归档、精简输出或测试历史清理授权。投稿前与维护者核对
-共享运行时 PR #104 的接入方向，以及根贡献条款和插件 MIT 声明的适用口径。
+Merge order: #141, then this PR. Please advise how this should align with shared-runtime work in #104, and clarify the plugin MIT declaration versus root contributor licensing terms. Advisory nodes never replace screenshot verification. Raw device content is not attached.

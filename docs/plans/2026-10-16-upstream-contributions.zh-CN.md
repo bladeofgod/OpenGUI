@@ -32,10 +32,16 @@
 
 候选头提交：原生确认 `34ec75c`，鸿蒙驱动 `a4eaac0`，精简输出 `3d94a02`。
 
-这是有依赖的候选序列，不是三个都直接对 `main` 打开的大 PR。第一项合入上游
-后，第二项重新基于上游整理；第二项合入后再提交第三项。逐份检查差异，保证
-已经合入的前置改动不会再次出现在下一份 PR 中。候选分支不包含本项目 1.1.8
-验收归档、测试清理授权、机器缓存或原始设备画面。
+按用户最新要求，三份 PR 现在全部向上游 `main` 提交，维护者按依赖顺序审核、
+合并。用户自行通过 GitHub 网页发布，不等待前置 PR 合入后才投稿。
+
+原生确认已发布为 [PR #141](https://github.com/Core-Mate/OpenGUI/pull/141)，
+截至本轮查询仍为 open、未合并。剩余两份正文已写明依赖，另附各自功能的独立
+比较链接。鸿蒙对 `main` 当前显示 3 提交、37 文件，其中本功能独立差异为 36
+文件；精简输出对 `main` 显示 5 提交、41 文件，本功能独立差异为 12 文件。
+前置合入后，再同步后续分支基线以更新比较范围。
+
+候选分支不包含本项目 1.1.8 验收归档、测试清理授权、机器缓存或原始设备画面。
 
 审查命令：
 
@@ -75,16 +81,18 @@ git diff feat/harmonyos-driver-contribution...feat/compact-observation-contribut
 
 ## 投稿材料与后续顺序
 
-1. 使用[原生确认草稿](../contributions/01-native-confirmation.md)提交第一份修复。
-2. 使用[鸿蒙能力提案](../contributions/harmonyos-proposal.md)沟通架构落点和平台范围，
-   确定后使用[鸿蒙 PR 草稿](../contributions/02-harmonyos-driver.md)。
-3. 在前置功能合入后，使用[精简输出草稿](../contributions/03-compact-output.md)。
+1. 原生确认已提交为 #141，准备材料见[原生确认草稿](../contributions/01-native-confirmation.md)。
+2. 直接提交[鸿蒙 PR](../contributions/02-harmonyos-driver.md)，把架构衔接问题写入
+   PR 供作者审核；[能力提案](../contributions/harmonyos-proposal.md)作为背景材料。
+3. 直接提交[精简输出 PR](../contributions/03-compact-output.md)，明确依赖鸿蒙
+   分支和 #141。两份预填网页入口见[剩余 PR 提交入口](../contributions/submission-links.md)。
 4. 测试清理授权留在 fork，先按[独立设计提案](../contributions/cleanup-grant-proposal.md)
    讨论其通用性、授权主体及审查方式。
 
-本轮准备分支和草稿，不代替用户签署 CLA，也不视为维护者已接受平台扩展。
+本轮准备分支、正文与网页入口，不代替用户签署 CLA，也不视为维护者已接受平台扩展。
 根贡献指南列有 BUSL-1.1、商用/再许可授权及较大外部贡献的 CLA 条款；独立插件
-子目录另有 MIT 声明。正式投稿前由维护者澄清适用口径，由有权授权的人确认。
+子目录另有 MIT 声明。适用口径已在 PR Notes 中请求维护者澄清；如要求正式
+CLA，由有权授权的人处理，不以准备或提交 PR 代替签署。
 
 ## 保持有效的边界
 

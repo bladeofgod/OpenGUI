@@ -1,37 +1,32 @@
 # PR 草稿：精简观察输出并保留完整私有证据
 
-候选：`feat/compact-observation-contribution`。前置：鸿蒙辅助布局能力。
-前置合入上游后更新目标 `main`，仅保留本功能差异。
+候选：`feat/compact-observation-contribution`。目标：上游 `main`，现在即可提交。
+建议标题：`feat(codex): add compact observations with private JSON evidence`。
+复制下面五个模板章节作为正文；鸿蒙前置 PR 用分支名明确标识，未猜测编号。
 
 ## What changed?
 
-增加可选 `--compact`，保留观察 ID、截图坐标、布局稳定性、聚焦输入和输入
-结果状态；完整观察写入私有 JSON，通过 `observationPath` 读取。关闭、取消
-及过期清理与截图采用相同的会话生命周期，默认完整输出保持原有行为。
+**Depends on #141 and the HarmonyOS driver PR from `bladeofgod:feat/harmonyos-driver-contribution`.** This stacked PR adds optional `--compact` observation output and owner-only complete JSON evidence at `observationPath`.
+
+Compact output retains observation IDs, screenshot coordinates, layout stability, focused inputs and action assessment. Default output stays complete; JPEG and JSON follow the same session cleanup lifecycle.
+
+The current `main` comparison includes both prerequisites: 5 commits and 41 files. The [compact-output-only comparison](https://github.com/bladeofgod/OpenGUI/compare/feat/harmonyos-driver-contribution...feat/compact-observation-contribution) isolates this feature's 12 files.
 
 ## Why?
 
-辅助布局可能包含较多文本。终端截断会使调用方难以完整解析响应；精简返回值
-让下一步操作所需字段保持完整，完整布局仍可按需读取。缺少布局的结果保持
-原样，不把这项能力描述为所有 Android 响应都能显著缩小。
+Large advisory layouts can exceed terminal output limits. Compact results keep the next-action context parseable while complete observations remain available for targeted reads. Results without layouts stay unchanged.
 
 ## Testing
 
-- `pnpm exec vitest run --maxWorkers=2`：22 个文件、138 项全量通过。
-- `pnpm build`、`pnpm validate`、`pnpm package`、安装器 shell 语法及隔离
-  打包安装检查通过。未放宽超时或断言。
-- 核对完整 JSON 的权限和内容、精简结果、默认输出及关闭后的文件清理。
-- CLI 集成测试仅在受支持的 macOS 宿主执行，其他跨平台测试继续运行。
-- 本机 Node.js 24.15.0、pnpm 10.31.0；远端规定版本的三平台 CI 待运行。
+- `pnpm exec vitest run --maxWorkers=2`: all 138 tests across 22 files passed.
+- `pnpm build`, `pnpm validate`, `pnpm package`, installer syntax and isolated packaged-install checks passed.
+- Tests check JSON permissions/content, compact/default responses and session cleanup. CLI integration runs on supported macOS hosts.
+- Local Node.js 24.15.0 / pnpm 10.31.0 results are separate from remote pinned-version CI. Assertions and timeouts were not relaxed.
 
 ## Device verification
 
-2026-10-16，源码 `386e81e`，TYR-AL00：新建截图会话、调用精简观察并查看截图。
-精简响应中无聚焦输入节点，完整 JSON 保留全部 104 个布局节点，文件权限为
-0600，观察 ID 和截图元数据一致；关闭后 JPEG 与 JSON 均已删除。仅验证观察
-输出与清理，不重复鸿蒙驱动已完成的翻页动作。
+2026-10-16, source `386e81e`, TYR-AL00: opened a screenshot session and inspected a compact observation. Its complete JSON retained 104 layout nodes with mode 0600 and matching observation/screenshot metadata. Closing the session removed JPEG and JSON. This check verified output and cleanup without repeating the driver's navigation smoke test.
 
 ## Notes
 
-精简节点并非完整布局，不得据此推断某元素不存在，也不替代截图确认。
-完整 JSON 可能包含辅助布局中的隐藏文本，按设备数据保护；原始结果不附入 PR。
+Merge order: #141, HarmonyOS driver, then this PR. Omitted compact nodes do not establish that an element is absent. Complete JSON can contain hidden advisory text and must remain private; raw device results are not attached.
