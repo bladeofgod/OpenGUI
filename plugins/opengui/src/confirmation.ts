@@ -9,7 +9,7 @@ export const CONFIRMATION_SCRIPT = [
   'set messageText to item 1 of argv',
   'try',
   'activate',
-  'set dialogReply to display dialog messageText with title "OpenGUI — Confirm Android action" buttons {"Cancel", "Allow once"} default button "Cancel" cancel button "Cancel" giving up after 60',
+  'set dialogReply to display dialog messageText with title "OpenGUI — Confirm device action" buttons {"Cancel", "Allow once"} default button "Cancel" cancel button "Cancel" giving up after 60',
   // AppleScript control statements can clear implicit `result`; retain the reply explicitly.
   'if gave up of dialogReply then return "timeout"',
   'return button returned of dialogReply',
@@ -22,7 +22,7 @@ export const CONFIRMATION_SCRIPT = [
 ].join('\n')
 
 export const confirmAction: ConfirmAction = async (effect, args, signal) => {
-  const description = `Allow one ${effect} action on the selected Android phone?\n\n${JSON.stringify(args, null, 2).slice(0, 3000)}\n\nOnly continue if this matches your request.`
+  const description = `Allow one ${effect} action on the selected device?\n\n${JSON.stringify(args, null, 2).slice(0, 3000)}\n\nOnly continue if this matches your request.`
   return confirmLocalSetup(description, signal)
 }
 

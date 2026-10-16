@@ -46,8 +46,8 @@ describe('native confirmation', () => {
     complete('Allow once')
     await expect(confirmAction('send', { text: 'Hello' }, signal())).resolves.toBe(true)
     const args = run.mock.calls[0]![1]
-    expect(args[1]).toContain('Confirm Android action')
-    expect(args[2]).toContain('Allow one send action on the selected Android phone?')
+    expect(args[1]).toContain('Confirm device action')
+    expect(args[2]).toContain('Allow one send action on the selected device?')
     expect(args[2]).toContain('"text": "Hello"')
   })
 
